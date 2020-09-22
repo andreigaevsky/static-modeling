@@ -1,12 +1,59 @@
 import java.util.Arrays;
+import java.util.List;
 
 public class Main {
 
     private static int N = 1000;
     private static int K = 128;
+    private static double deltaKolm = 1.36;
+    private static double deltaHi = 1074.68;
     private static int paramBetta = 131075;
     private static int paramAlfa = 131075;
-    private static double M = Math.pow(2, 10);
+    private static double M = Math.pow(2, 31);
+
+    private static void sort(double[] array) {
+        double temp;
+        int i, j;
+        for (i = 0; i < array.length; i++)
+            for (j = 1; j < array.length - i; j++) {
+                if (array[j - 1] > array[j]) {
+                    temp = array[j];
+                    array[j] = array[j - 1];
+                    array[j - 1] = temp;
+                }
+            }
+    }
+
+
+    private static double KolmogorovTest(double[] array) {
+        sort(array);
+        int i = 0;
+        double D = 0;
+        double temp;
+        for (i = 0; i < array.length; i++) {
+            temp = Math.abs(((double) (i + 1)) / array.length - array[i]);
+            if (D < temp)
+                D = temp;
+        }
+        return D;
+    }
+
+
+    private static double Hi2Test(double[] array, int intervalsCount) {
+         sort(array);
+        int i = 0;
+        int count = 0, j = 0;
+        double xi2 = 0;
+        for (j = 1; j < intervalsCount; j++) {
+            count = 0;
+            while ((i < array.length) && (array[i] < ((double) j) / intervalsCount)) {
+                i++;
+                count++;
+            }
+            xi2 += Math.pow((count - ((double)array.length) / intervalsCount), 2) / (((double)array.length) / intervalsCount);
+        }
+        return xi2;
+    }
 
     public static double mod(double what, double module) {
         return what - module * (Math.floor( what / module));
@@ -17,7 +64,7 @@ public class Main {
 
         int BRVsize = size*K;
         double[] b = multiplicativeCongruentMethod(BRVsize, paramAlfa, paramBetta, M);
-        double[] c = multiplicativeCongruentMethod(BRVsize, 79507, 79507, M);
+        double[] c = multiplicativeCongruentMethod(size, 79507, 79507, M);
         double[] V = new double[K];
 
         for (int i = 0; i < size; i++) {
@@ -27,6 +74,10 @@ public class Main {
         }
 
         return result;
+    }
+
+    private static void showIsAccepted(String what, double result, double expected) {
+        System.out.println(what+" = " + result + " < " +expected+" is "+ (result < expected));
     }
 
     public static double[] multiplicativeCongruentMethod(int size, int paramAlfa, int paramBetta, double M) {
@@ -40,9 +91,27 @@ public class Main {
         return result;
     }
 
-    public static void main(String[] args) {
-        double[] alfas = MacLarenMarsagliaMethod(N);
+    private static void showResults (String what, double [] alfas) {
+        System.out.println("**** "+what+"*****");
+
+        double resDn = KolmogorovTest(Arrays.copyOf(alfas, alfas.length));
+        showIsAccepted("sqrt(n)Dn", resDn*Math.sqrt(N)*resDn, deltaKolm);
+
+        double resDeltaHi = Hi2Test(Arrays.copyOf(alfas, alfas.length),10);
+        showIsAccepted("HI2", resDeltaHi, deltaHi);
 
         System.out.println(Arrays.toString(alfas));
+        for (final double alfa : alfas) {
+            System.out.println(alfa);
+        }
+        System.out.println();
+    }
+
+    public static void main(String[] args) {
+        double[] alfasKolm = multiplicativeCongruentMethod(N, paramAlfa, paramBetta, M);
+        showResults("Multiplicative Congruent method", alfasKolm);
+
+        double[] alfasMM = MacLarenMarsagliaMethod(N);
+        showResults("MacLaren-Marsaglia method", alfasMM);
     }
 }
