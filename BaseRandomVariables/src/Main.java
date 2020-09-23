@@ -1,15 +1,14 @@
 import java.util.Arrays;
-import java.util.List;
 
 public class Main {
 
-    private static int N = 1000;
-    private static int K = 128;
-    private static double deltaKolm = 1.36;
-    private static double deltaHi = 1074.68;
-    private static int paramBetta = 131075;
-    private static int paramAlfa = 131075;
-    private static double M = Math.pow(2, 10);
+    private static int N = 1000; // count of random variables
+    private static int K = 128;  // MacLaren-Marsaglia Method box
+    private static double deltaKolm = 1.36; // Kolmogorov distribution function value
+    private static double deltaHi = 16.92; // chi square distribution function value
+    private static int paramBetta = 131075; // any value
+    private static int paramAlfa = 131075; // any value
+    private static double M = Math.pow(2, 31);
 
     private static void sort(double[] array) {
         double temp;
