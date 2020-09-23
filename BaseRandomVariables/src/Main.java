@@ -41,11 +41,11 @@ public class Main {
     private static double Hi2Test(double[] array, int intervalsCount) {
          sort(array);
         int i = 0;
-        int count = 0, j = 0;
+        int count , j ;
         double xi2 = 0;
-        for (j = 1; j < intervalsCount; j++) {
+        for (j = 1; j <= intervalsCount; j++) {
             count = 0;
-            while ((i < array.length) && (array[i] < ((double) j) / intervalsCount)) {
+            while ((i < array.length) && array[i] < (double) j / intervalsCount) {
                 i++;
                 count++;
             }
@@ -96,7 +96,7 @@ public class Main {
         System.out.println("**** "+what+"*****");
 
         double resDn = KolmogorovTest(Arrays.copyOf(alfas, alfas.length));
-        showIsAccepted("sqrt(n)Dn", resDn*Math.sqrt(N)*resDn, deltaKolm);
+        showIsAccepted("sqrt(n)Dn", resDn*Math.sqrt(N), deltaKolm);
 
         double resDeltaHi = Hi2Test(Arrays.copyOf(alfas, alfas.length),10);
         showIsAccepted("HI2", resDeltaHi, deltaHi);
