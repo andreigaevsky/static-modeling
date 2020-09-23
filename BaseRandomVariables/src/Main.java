@@ -9,7 +9,7 @@ public class Main {
     private static double deltaHi = 1074.68;
     private static int paramBetta = 131075;
     private static int paramAlfa = 131075;
-    private static double M = Math.pow(2, 31);
+    private static double M = Math.pow(2, 10);
 
     private static void sort(double[] array) {
         double temp;
@@ -62,15 +62,17 @@ public class Main {
     public static double[] MacLarenMarsagliaMethod(int size) {
         double result[] = new double[size];
 
-        int BRVsize = size*K;
+        int BRVsize = size+K;
         double[] b = multiplicativeCongruentMethod(BRVsize, paramAlfa, paramBetta, M);
         double[] c = multiplicativeCongruentMethod(size, 79507, 79507, M);
         double[] V = new double[K];
-
+        System.arraycopy(b, 0, V, 0, K);
+        int s;
         for (int i = 0; i < size; i++) {
-            System.arraycopy(b, (K*i), V, 0, K);
 
-            result[i] = V[(int) Math.floor(c[i] * K)];
+            s = (int) Math.floor(c[i] * K);
+            result[i] = V[s];
+            V[s] = b[i+K];
         }
 
         return result;
@@ -101,9 +103,9 @@ public class Main {
         showIsAccepted("HI2", resDeltaHi, deltaHi);
 
         System.out.println(Arrays.toString(alfas));
-        for (final double alfa : alfas) {
+        /*for (final double alfa : alfas) {
             System.out.println(alfa);
-        }
+        }*/
         System.out.println();
     }
 
