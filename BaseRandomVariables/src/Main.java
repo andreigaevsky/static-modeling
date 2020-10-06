@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Main {
 
@@ -39,9 +40,9 @@ public class Main {
 
 
     private static double Hi2Test(double[] array, int intervalsCount) {
-         sort(array);
+        sort(array);
         int i = 0;
-        int count , j ;
+        int count, j;
         double xi2 = 0;
         for (j = 1; j <= intervalsCount; j++) {
             count = 0;
@@ -49,19 +50,19 @@ public class Main {
                 i++;
                 count++;
             }
-            xi2 += Math.pow((count - ((double)array.length) / intervalsCount), 2) / (((double)array.length) / intervalsCount);
+            xi2 += Math.pow((count - ((double) array.length) / intervalsCount), 2) / (((double) array.length) / intervalsCount);
         }
         return xi2;
     }
 
     public static double mod(double what, double module) {
-        return what - module * (Math.floor( what / module));
+        return what - module * (Math.floor(what / module));
     }
 
     public static double[] MacLarenMarsagliaMethod(int size) {
         double result[] = new double[size];
 
-        int BRVsize = size+K;
+        int BRVsize = size + K;
         double[] b = multiplicativeCongruentMethod(BRVsize, paramAlfa, paramBetta, M);
         double[] c = multiplicativeCongruentMethod(size, 79507, 79507, M);
         double[] V = new double[K];
@@ -71,14 +72,14 @@ public class Main {
 
             s = (int) Math.floor(c[i] * K);
             result[i] = V[s];
-            V[s] = b[i+K];
+            V[s] = b[i + K];
         }
 
         return result;
     }
 
     private static void showIsAccepted(String what, double result, double expected) {
-        System.out.println(what+" = " + result + " < " +expected+" is "+ (result < expected));
+        System.out.println(what + " = " + result + " < " + expected + " is " + (result < expected));
     }
 
     public static double[] multiplicativeCongruentMethod(int size, int paramAlfa, int paramBetta, double M) {
@@ -92,13 +93,13 @@ public class Main {
         return result;
     }
 
-    private static void showResults (String what, double [] alfas) {
-        System.out.println("**** "+what+"*****");
+    private static void showResults(String what, double[] alfas) {
+        System.out.println("**** " + what + "*****");
 
         double resDn = KolmogorovTest(Arrays.copyOf(alfas, alfas.length));
-        showIsAccepted("sqrt(n)Dn", resDn*Math.sqrt(N), deltaKolm);
+        showIsAccepted("sqrt(n)Dn", resDn * Math.sqrt(N), deltaKolm);
 
-        double resDeltaHi = Hi2Test(Arrays.copyOf(alfas, alfas.length),10);
+        double resDeltaHi = Hi2Test(Arrays.copyOf(alfas, alfas.length), 10);
         showIsAccepted("HI2", resDeltaHi, deltaHi);
 
         System.out.println(Arrays.toString(alfas));
@@ -107,6 +108,56 @@ public class Main {
         }*/
         System.out.println();
     }
+
+    public static int[] generateBinomial(int size, double p, int m) {
+        int[] result = new int[size];
+
+        int aplha;
+        int betta;
+
+        for (int i = 0; i < size; ++i) {
+            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
+            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
+            result[i] = getBinomial(multiplicativeCongruentMethod(m, aplha, betta, M), p);
+        }
+
+        return result;
+    }
+
+    public static int[] generatePoison(int size, double lambda) {
+        return generateBinomial(size, lambda/10, 10);
+    }
+
+    public static int[] generateBernoulli(int size, double p) {
+        int[] result = new int[size];
+
+        int aplha;
+        int betta;
+
+        for (int i = 0; i < size; ++i) {
+            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
+            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
+            result[i] = getBernoulli(multiplicativeCongruentMethod(1, aplha, betta, M)[0], p);
+        }
+
+        return result;
+    }
+
+    public static int getBernoulli(double value, double p) {
+        return value > p ? 0 : 1;
+    }
+
+
+    public static int getBinomial(double[] array, double p) {
+        int x = 0;
+        for (double v : array) {
+            if (v > p) {
+                ++x;
+            }
+        }
+        return x;
+    }
+
 
     public static void main(String[] args) {
         double[] alfasKolm = multiplicativeCongruentMethod(N, paramAlfa, paramBetta, M);
