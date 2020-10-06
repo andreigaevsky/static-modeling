@@ -109,6 +109,31 @@ public class Main {
         System.out.println();
     }
 
+    private static void showResults(String what, int[] alfas, double realVariance, double realME) {
+        System.out.println("**** " + what + "*****");
+
+
+
+        System.out.println(Arrays.toString(alfas));
+        int a = 0;
+        for (final double alfa : alfas) {
+            a+=alfa;
+        }
+        double ueme = (double)a/N;
+        System.out.println("unbiased estimate of mathematical expectation: "+ueme);
+        System.out.println("real mathematical expectation: "+realME);
+
+        double uev = 0.0;
+        for (final double alfa : alfas) {
+            uev+=Math.pow(alfa-ueme,2);
+        }
+        uev = uev/(N-1);
+        System.out.println("unbiased estimate of the variance: "+uev);
+        System.out.println("real estimate of the variance: "+realVariance);
+
+        System.out.println();
+    }
+
     public static int[] generateBinomial(int size, double p, int m) {
         int[] result = new int[size];
 
@@ -116,8 +141,8 @@ public class Main {
         int betta;
 
         for (int i = 0; i < size; ++i) {
-            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
-            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
+            aplha = ThreadLocalRandom.current().nextInt(1, 100000);
+            betta = ThreadLocalRandom.current().nextInt(1, 100000);
             result[i] = getBinomial(multiplicativeCongruentMethod(m, aplha, betta, M), p);
         }
 
@@ -135,8 +160,8 @@ public class Main {
         int betta;
 
         for (int i = 0; i < size; ++i) {
-            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
-            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
+            aplha = ThreadLocalRandom.current().nextInt(1, 100000);
+            betta = ThreadLocalRandom.current().nextInt(1, 100000);
             result[i] = getBernoulli(multiplicativeCongruentMethod(1, aplha, betta, M)[0], p);
         }
 
@@ -151,7 +176,7 @@ public class Main {
     public static int getBinomial(double[] array, double p) {
         int x = 0;
         for (double v : array) {
-            if (v > p) {
+            if (p > v) {
                 ++x;
             }
         }
@@ -160,10 +185,16 @@ public class Main {
 
 
     public static void main(String[] args) {
-        double[] alfasKolm = multiplicativeCongruentMethod(N, paramAlfa, paramBetta, M);
+/*        double[] alfasKolm = multiplicativeCongruentMethod(N, paramAlfa, paramBetta, M);
         showResults("Multiplicative Congruent method", alfasKolm);
 
         double[] alfasMM = MacLarenMarsagliaMethod(N);
-        showResults("MacLaren-Marsaglia method", alfasMM);
+        showResults("MacLaren-Marsaglia method", alfasMM);*/
+
+        int[] valuesPoison = generatePoison(N, 0.5);
+        showResults("Poison method", valuesPoison, 0.5*(1-0.05), 0.5);
+
+        int[] valuesBernoulli = generateBernoulli(N, 0.6);
+        showResults("Bernoulli method", valuesBernoulli, 0.6*(1-0.6), 0.6);
     }
 }
