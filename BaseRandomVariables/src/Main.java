@@ -7,6 +7,7 @@ public class Main {
     private static int K = 128;  // MacLaren-Marsaglia Method box
     private static double deltaKolm = 1.36; // Kolmogorov distribution function value
     private static double deltaHi = 16.92; // chi square distribution function value
+    private static double deltaHiForBernoulli = 3.84; // chi square distribution function value
     private static int paramBetta = 131075; // any value
     private static int paramAlfa = 131075; // any value
     private static double M = Math.pow(2, 31);
@@ -14,7 +15,7 @@ public class Main {
     private static void sort(double[] array) {
         double temp;
         int i, j;
-        for (i = 0; i < array.length; i++)
+        for (i = 0; i < array.length; i++) {
             for (j = 1; j < array.length - i; j++) {
                 if (array[j - 1] > array[j]) {
                     temp = array[j];
@@ -22,8 +23,8 @@ public class Main {
                     array[j - 1] = temp;
                 }
             }
+        }
     }
-
 
     private static double KolmogorovTest(double[] array) {
         sort(array);
@@ -32,12 +33,12 @@ public class Main {
         double temp;
         for (i = 0; i < array.length; i++) {
             temp = Math.abs(((double) (i + 1)) / array.length - array[i]);
-            if (D < temp)
+            if (D < temp) {
                 D = temp;
+            }
         }
         return D;
     }
-
 
     private static double Hi2Test(double[] array, int intervalsCount) {
         sort(array);
@@ -54,6 +55,52 @@ public class Main {
         }
         return xi2;
     }
+
+    private static double Hi2TestForBernoulli(int[] array, double p) {
+        int zero = 0;
+        int one = 0;
+        for (int value : array) {
+            if (value == 0) {
+                ++zero;
+            } else {
+                one++;
+            }
+        }
+        double hiFirst = (zero - N * (1 - p)) / N * (1 - p);
+        double hiSecond = (one - N * p) / N * p;
+        return hiFirst + hiSecond;
+    }
+
+    private static double Hi2TestForPoison(int[] array, double p, int maxValue) {
+        int[] count = new int[maxValue+1];
+        Arrays.fill(count, 0);
+        for (int value : array) {
+            count[value] = ++count[value];
+        }
+        double hi = 0;
+        double v;
+        for (int i = 0; i <= maxValue; i++) {
+            v = getBinomialValue(i, maxValue, p);
+            hi += (count[i] - N * v) / N * v;
+        }
+
+        return hi;
+    }
+
+    private static double getBinomialValue(int value, int m, double p){
+        return (double)factorial(m)/factorial(m-value)/factorial(value)*Math.pow(p, value)*Math.pow(1-p,m-value);
+    }
+
+    public static long factorial(int number) {
+        long result = 1;
+
+        for (int factor = 2; factor <= number; factor++) {
+            result *= factor;
+        }
+
+        return result;
+    }
+
 
     public static double mod(double what, double module) {
         return what - module * (Math.floor(what / module));
@@ -112,24 +159,22 @@ public class Main {
     private static void showResults(String what, int[] alfas, double realVariance, double realME) {
         System.out.println("**** " + what + "*****");
 
-
-
         System.out.println(Arrays.toString(alfas));
         int a = 0;
         for (final double alfa : alfas) {
-            a+=alfa;
+            a += alfa;
         }
-        double ueme = (double)a/N;
-        System.out.println("unbiased estimate of mathematical expectation: "+ueme);
-        System.out.println("real mathematical expectation: "+realME);
+        double ueme = (double) a / N;
+        System.out.println("unbiased estimate of mathematical expectation: " + ueme);
+        System.out.println("real mathematical expectation: " + realME);
 
         double uev = 0.0;
         for (final double alfa : alfas) {
-            uev+=Math.pow(alfa-ueme,2);
+            uev += Math.pow(alfa - ueme, 2);
         }
-        uev = uev/(N-1);
-        System.out.println("unbiased estimate of the variance: "+uev);
-        System.out.println("real estimate of the variance: "+realVariance);
+        uev = uev / (N - 1);
+        System.out.println("unbiased estimate of the variance: " + uev);
+        System.out.println("real estimate of the variance: " + realVariance);
 
         System.out.println();
     }
@@ -150,7 +195,7 @@ public class Main {
     }
 
     public static int[] generatePoison(int size, double lambda) {
-        return generateBinomial(size, lambda/10, 10);
+        return generateBinomial(size, lambda / 10, 10);
     }
 
     public static int[] generateBernoulli(int size, double p) {
@@ -172,7 +217,6 @@ public class Main {
         return value > p ? 0 : 1;
     }
 
-
     public static int getBinomial(double[] array, double p) {
         int x = 0;
         for (double v : array) {
@@ -183,7 +227,6 @@ public class Main {
         return x;
     }
 
-
     public static void main(String[] args) {
 /*        double[] alfasKolm = multiplicativeCongruentMethod(N, paramAlfa, paramBetta, M);
         showResults("Multiplicative Congruent method", alfasKolm);
@@ -192,9 +235,13 @@ public class Main {
         showResults("MacLaren-Marsaglia method", alfasMM);*/
 
         int[] valuesPoison = generatePoison(N, 0.5);
-        showResults("Poison method", valuesPoison, 0.5*(1-0.05), 0.5);
+        showResults("Poison method", valuesPoison, 0.5 * (1 - 0.05), 0.5);
+        double resDeltaHiPoison = Hi2TestForPoison(Arrays.copyOf(valuesPoison, valuesPoison.length), 0.05, 10);
+        showIsAccepted("HI2", resDeltaHiPoison, deltaHiForBernoulli);
 
         int[] valuesBernoulli = generateBernoulli(N, 0.6);
-        showResults("Bernoulli method", valuesBernoulli, 0.6*(1-0.6), 0.6);
+        showResults("Bernoulli method", valuesBernoulli, 0.6 * (1 - 0.6), 0.6);
+        double resDeltaHi = Hi2TestForBernoulli(Arrays.copyOf(valuesBernoulli, valuesBernoulli.length), 0.6);
+        showIsAccepted("HI2", resDeltaHi, deltaHiForBernoulli);
     }
 }
