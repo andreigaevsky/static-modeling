@@ -66,12 +66,12 @@ public class Main {
                 one++;
             }
         }
-        double hiFirst = (zero - N * (1 - p)) / N * (1 - p);
-        double hiSecond = (one - N * p) / N * p;
+        double hiFirst = Math.pow(zero - N * (1 - p), 2) / N * (1 - p);
+        double hiSecond = Math.pow(one - N * p, 2) / N * p;
         return hiFirst + hiSecond;
     }
 
-    private static double Hi2TestForPoison(int[] array, double p, int maxValue) {
+    private static double Hi2TestForBinomial(int[] array, double p, int maxValue) {
         int[] count = new int[maxValue+1];
         Arrays.fill(count, 0);
         for (int value : array) {
@@ -81,7 +81,7 @@ public class Main {
         double v;
         for (int i = 0; i <= maxValue; i++) {
             v = getBinomialValue(i, maxValue, p);
-            hi += (count[i] - N * v) / N * v;
+            hi += Math.pow(count[i] - N * v, 2) / N * v;
         }
 
         return hi;
@@ -129,7 +129,7 @@ public class Main {
         System.out.println(what + " = " + result + " < " + expected + " is " + (result < expected));
     }
 
-    public static double[] multiplicativeCongruentMethod(int size, int paramAlfa, int paramBetta, double M) {
+    public static double[] multiplicativeCongruentMethod(int size, double paramAlfa, double paramBetta, double M) {
         double[] result = new double[size];
 
         double nextParamAlfa = mod(paramAlfa * paramBetta, M);
@@ -161,7 +161,7 @@ public class Main {
 
         System.out.println(Arrays.toString(alfas));
         int a = 0;
-        for (final double alfa : alfas) {
+        for (final int alfa : alfas) {
             a += alfa;
         }
         double ueme = (double) a / N;
@@ -169,7 +169,7 @@ public class Main {
         System.out.println("real mathematical expectation: " + realME);
 
         double uev = 0.0;
-        for (final double alfa : alfas) {
+        for (final int alfa : alfas) {
             uev += Math.pow(alfa - ueme, 2);
         }
         uev = uev / (N - 1);
@@ -186,8 +186,10 @@ public class Main {
         int betta;
 
         for (int i = 0; i < size; ++i) {
-            aplha = ThreadLocalRandom.current().nextInt(1, 100000);
-            betta = ThreadLocalRandom.current().nextInt(1, 100000);
+            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
+            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
+            aplha = aplha%2==0 ? aplha-1: aplha;
+            betta = betta%2==0 ? betta-1: betta;
             result[i] = getBinomial(multiplicativeCongruentMethod(m, aplha, betta, M), p);
         }
 
@@ -205,8 +207,10 @@ public class Main {
         int betta;
 
         for (int i = 0; i < size; ++i) {
-            aplha = ThreadLocalRandom.current().nextInt(1, 100000);
-            betta = ThreadLocalRandom.current().nextInt(1, 100000);
+            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
+            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
+            aplha = aplha%2==0 ? aplha-1: aplha;
+            betta = betta%2==0 ? betta-1: betta;
             result[i] = getBernoulli(multiplicativeCongruentMethod(1, aplha, betta, M)[0], p);
         }
 
@@ -234,10 +238,13 @@ public class Main {
         double[] alfasMM = MacLarenMarsagliaMethod(N);
         showResults("MacLaren-Marsaglia method", alfasMM);*/
 
-        int[] valuesPoison = generatePoison(N, 0.5);
-        showResults("Poison method", valuesPoison, 0.5 * (1 - 0.05), 0.5);
-        double resDeltaHiPoison = Hi2TestForPoison(Arrays.copyOf(valuesPoison, valuesPoison.length), 0.05, 10);
-        showIsAccepted("HI2", resDeltaHiPoison, deltaHiForBernoulli);
+        final int m = 10;
+        final double p = 0.05;
+        final double lambda = 0.5;
+        int[] valuesPoison = generateBinomial(N,p,m);
+        showResults("Poison method", valuesPoison, m*p * (1 - p), m*p);
+        double resDeltaHiPoison = Hi2TestForBinomial(Arrays.copyOf(valuesPoison, valuesPoison.length), p, m);
+        showIsAccepted("HI2", resDeltaHiPoison, deltaHi);
 
         int[] valuesBernoulli = generateBernoulli(N, 0.6);
         showResults("Bernoulli method", valuesBernoulli, 0.6 * (1 - 0.6), 0.6);
