@@ -1,4 +1,4 @@
-import java.util.Arrays;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Main {
@@ -69,6 +69,28 @@ public class Main {
         double hiFirst = Math.pow(zero - N * (1 - p), 2) / N * (1 - p);
         double hiSecond = Math.pow(one - N * p, 2) / N * p;
         return hiFirst + hiSecond;
+    }
+
+    private static double Hi2TestForGeometric(int[] array, double p) {
+        Map<Integer, Integer> count = new HashMap<>();
+
+
+        for (int value : array) {
+            if(count.containsKey(value)){
+                count.put(value, count.get(value)+1);
+            }else{
+                count.put(value, 1);
+            }
+        }
+        System.out.println("Freedom number: "+ count.size());
+        double hi = 0;
+        double d;
+        for (int v : count.keySet()) {
+            d = Math.pow(1-p, v-1)*p;
+            hi += Math.pow(count.get(v) - N * d, 2) / N * d;
+        }
+
+        return hi;
     }
 
     private static double Hi2TestForBinomial(int[] array, double p, int maxValue) {
@@ -200,6 +222,27 @@ public class Main {
         return generateBinomial(size, lambda / 10, 10);
     }
 
+    public static int[] generateGeometric(int size, double p) {
+        int[] result = new int[size];
+
+        int aplha;
+        int betta;
+
+        for (int i = 0; i < size; ++i) {
+            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
+            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
+            aplha = aplha%2==0 ? aplha-1: aplha;
+            betta = betta%2==0 ? betta-1: betta;
+            result[i] = getGeometric(multiplicativeCongruentMethod(1, aplha, betta, M)[0], p);
+        }
+
+        return result;
+    }
+
+    public static int getGeometric(double value, double p) {
+        return (int) Math.ceil(Math.log(value)/Math.log(1-p));
+    }
+
     public static int[] generateBernoulli(int size, double p) {
         int[] result = new int[size];
 
@@ -241,7 +284,7 @@ public class Main {
         final int m = 10;
         final double p = 0.05;
         final double lambda = 0.5;
-        int[] valuesPoison = generateBinomial(N,p,m);
+        int[] valuesPoison = generatePoison(N,lambda);
         showResults("Poison method", valuesPoison, m*p * (1 - p), m*p);
         double resDeltaHiPoison = Hi2TestForBinomial(Arrays.copyOf(valuesPoison, valuesPoison.length), p, m);
         showIsAccepted("HI2", resDeltaHiPoison, deltaHi);
@@ -250,5 +293,16 @@ public class Main {
         showResults("Bernoulli method", valuesBernoulli, 0.6 * (1 - 0.6), 0.6);
         double resDeltaHi = Hi2TestForBernoulli(Arrays.copyOf(valuesBernoulli, valuesBernoulli.length), 0.6);
         showIsAccepted("HI2", resDeltaHi, deltaHiForBernoulli);
+
+        int[] valuesGeometric = generateGeometric(N, 0.6);
+        int i = 0;
+        for(int v : valuesGeometric) {
+            if(v==2){
+                i++;
+            }
+        }
+        System.out.println(i);
+        showResults("Geometric method", valuesGeometric, 0.6/Math.pow(0.4,2), 1/(1-0.6));
+        System.out.println( Hi2TestForGeometric(Arrays.copyOf(valuesGeometric, valuesGeometric.length), 0.6));
     }
 }
