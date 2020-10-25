@@ -1,10 +1,17 @@
+import org.apache.commons.math3.special.Gamma;
+
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static java.lang.Math.*;
+import static org.apache.commons.math3.special.Erf.erf;
+import static org.apache.commons.math3.special.Gamma.gamma;
 
 public class Main {
 
     private static int N = 1000; // count of random variables
     private static int K = 128;  // MacLaren-Marsaglia Method box
+    private static double KA = 1.35;  // 0.05
     private static double deltaKolm = 1.36; // Kolmogorov distribution function value
     private static double deltaHi = 16.92; // chi square distribution function value
     private static double deltaHiForBernoulli = 3.84; // chi square distribution function value
@@ -52,6 +59,29 @@ public class Main {
                 count++;
             }
             xi2 += Math.pow((count - ((double) array.length) / intervalsCount), 2) / (((double) array.length) / intervalsCount);
+        }
+        return xi2;
+    }
+
+
+    private static double Hi2TestExp(double[] array, double a) {
+        sort(array);
+        int i = 0;
+        int count, j;
+        double xi2 = 0;
+        double last = array[array.length-1];
+        int intervalsCount = 10;
+        double m = last/intervalsCount;
+
+        for (j = 1; j <= intervalsCount; j++) {
+            count = 0;
+            double p = 0;
+            while ((i < array.length) && array[i] < j*m ) {
+                i++;
+                count++;
+            }
+            p =  exp(-a*j*m);
+            xi2 += Math.pow( (count - ((double) array.length) * p) , 2) /((double) array.length) * p;
         }
         return xi2;
     }
@@ -166,7 +196,7 @@ public class Main {
         System.out.println("**** " + what + "*****");
 
         double resDn = KolmogorovTest(Arrays.copyOf(alfas, alfas.length));
-        showIsAccepted("sqrt(n)Dn", resDn * Math.sqrt(N), deltaKolm);
+        showIsAccepted("sqrt(n)Dn", resDn * sqrt(N), deltaKolm);
 
         double resDeltaHi = Hi2Test(Arrays.copyOf(alfas, alfas.length), 10);
         showIsAccepted("HI2", resDeltaHi, deltaHi);
@@ -178,12 +208,12 @@ public class Main {
         System.out.println();
     }
 
-    private static void showResults(String what, int[] alfas, double realVariance, double realME) {
+    private static void showResults(String what, double[] alfas, double realVariance, double realME) {
         System.out.println("**** " + what + "*****");
 
         System.out.println(Arrays.toString(alfas));
         int a = 0;
-        for (final int alfa : alfas) {
+        for (final double alfa : alfas) {
             a += alfa;
         }
         double ueme = (double) a / N;
@@ -191,14 +221,13 @@ public class Main {
         System.out.println("real mathematical expectation: " + realME);
 
         double uev = 0.0;
-        for (final int alfa : alfas) {
+        for (final double alfa : alfas) {
             uev += Math.pow(alfa - ueme, 2);
         }
         uev = uev / (N - 1);
         System.out.println("unbiased estimate of the variance: " + uev);
         System.out.println("real estimate of the variance: " + realVariance);
 
-        System.out.println();
     }
 
     public static int[] generateBinomial(int size, double p, int m) {
@@ -208,8 +237,8 @@ public class Main {
         int betta;
 
         for (int i = 0; i < size; ++i) {
-            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
-            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
+            aplha = ThreadLocalRandom.current().nextInt(1000, 1000000);
+            betta = ThreadLocalRandom.current().nextInt(1000, 1000000);
             aplha = aplha%2==0 ? aplha-1: aplha;
             betta = betta%2==0 ? betta-1: betta;
             result[i] = getBinomial(multiplicativeCongruentMethod(m, aplha, betta, M), p);
@@ -240,7 +269,7 @@ public class Main {
     }
 
     public static int getGeometric(double value, double p) {
-        return (int) Math.ceil(Math.log(value)/Math.log(1-p));
+        return (int) Math.ceil(log(value)/ log(1-p));
     }
 
     public static int[] generateBernoulli(int size, double p) {
@@ -274,6 +303,162 @@ public class Main {
         return x;
     }
 
+    static void kolmogorovTestForNormal(double mu, double sg_2, double[] normdist)
+    {
+        double fotx, temp, d = 0.0, ka = sqrt(N);
+
+        sort(normdist);
+
+        for (int i = 0; i < N; i++)
+        {
+            fotx = 0.5 * (1 + erf((normdist[i] - mu) / (sqrt(2.0 * sg_2))));
+
+            temp = abs((double)(i + 1) / N - fotx);
+
+            if (d < temp)
+                d = temp;
+        }
+
+        ka *= d;
+
+        if (ka < KA)
+            System.out.println( "Kolmogorov test: " + ka + " < " + KA + " => true sequence");
+        else
+            System.out.println( "Kolmogorov test: " + ka + " > " + KA + " => false sequence");
+    }
+
+
+    static double[] normalDistribution(double m, double s_2, int size)
+    {
+        double[] res = new double[size];
+        int aplha;
+        int betta;
+        for (int i = 0; i < size; i++)
+        {
+            double temp = 0;
+            for (int j = 0; j < 12; j++) {
+                aplha = ThreadLocalRandom.current().nextInt(10000, 1000000);
+                betta = ThreadLocalRandom.current().nextInt(10000, 1000000);
+                aplha = aplha%2==0 ? aplha-1: aplha;
+                betta = betta%2==0 ? betta-1: betta;
+                temp += multiplicativeCongruentMethod(1, aplha, betta,M)[0];
+            }
+            temp -= 6;
+            res[i] = m + sqrt(s_2) * temp;
+        }
+
+        return res;
+    }
+
+
+    static void kolmogorovTestForExponential(double a, double[] expdist)
+    {
+        double fotx, temp, d = 0.0, ka = sqrt(N);
+
+        sort(expdist);
+
+        for (int i = 0; i < N; i++)
+        {
+            fotx = 1.0 - exp(-a * expdist[i]);
+
+            temp = abs((double)(i + 1) / N - fotx);
+
+            if (d < temp)
+                d = temp;
+        }
+
+        ka *= d;
+
+        if (ka < KA)
+            System.out.println("Kolmogorov test: " +ka +" < " +KA + " => true sequence");
+        else
+            System.out.println( "Kolmogorov test: " + ka + " > " + KA + " => false sequence" );
+    }
+
+
+    static double[] exponentialDistribution(double lm, int size)
+    {
+        double[] res = new double [size];
+        int aplha;
+        int betta;
+        for (int i = 0; i < size; i++)
+        {
+            aplha = ThreadLocalRandom.current().nextInt(10000, 1000000);
+            betta = ThreadLocalRandom.current().nextInt(10000, 1000000);
+            aplha = aplha%2==0 ? aplha-1: aplha;
+            betta = betta%2==0 ? betta-1: betta;
+            res[i] = (-1.0 / lm) * log(multiplicativeCongruentMethod(1, aplha, betta,M)[0]);
+        }
+
+        return res;
+    }
+
+    static void kolmogorovTestForWeibull(double a, double b, double[] expdist)
+    {
+        double fotx, temp, d = 0.0, ka = sqrt(N);
+
+        sort(expdist);
+
+        for (int i = 0; i < N; i++)
+        {
+            fotx = 1.0 - exp(-a * pow(expdist[i], b));
+
+            temp = abs((double)(i + 1) / N - fotx);
+
+            if (d < temp)
+                d = temp;
+        }
+
+        ka *= d;
+
+        if (ka < KA)
+            System.out.println("Kolmogorov test: " +ka +" < " +KA + " => true sequence");
+        else
+            System.out.println( "Kolmogorov test: " + ka + " > " + KA + " => false sequence" );
+    }
+
+
+    static double[] weibullDistribution(double a,double b,  int size)
+    {
+        double[] res = new double [size];
+        int aplha;
+        int betta;
+        for (int i = 0; i < size; i++)
+        {
+            aplha = ThreadLocalRandom.current().nextInt(10000, 1000000);
+            betta = ThreadLocalRandom.current().nextInt(10000, 1000000);
+            aplha = aplha%2==0 ? aplha-1: aplha;
+            betta = betta%2==0 ? betta-1: betta;
+            res[i] = pow( (-1.0 / a) * log(multiplicativeCongruentMethod(1, aplha, betta,M)[0]), 1.0/b);
+        }
+
+        return res;
+    }
+
+    private static double Hi2TestWeibull(double[] array, double a) {
+        sort(array);
+        int i = 0;
+        int count, j;
+        double xi2 = 0;
+        double last = array[array.length-1];
+        int intervalsCount = 10;
+        double m = last/intervalsCount;
+
+        for (j = 1; j <= intervalsCount; j++) {
+            count = 0;
+            double p = 0;
+            while ((i < array.length) && array[i] < j*m ) {
+                i++;
+                count++;
+            }
+            p =  exp(-a*j*m);
+            xi2 += Math.pow( (count - ((double) array.length) * p) , 2) /((double) array.length) * p;
+        }
+        return xi2;
+    }
+
+
+
     public static void main(String[] args) {
 /*        double[] alfasKolm = multiplicativeCongruentMethod(N, paramAlfa, paramBetta, M);
         showResults("Multiplicative Congruent method", alfasKolm);
@@ -284,25 +469,18 @@ public class Main {
         final int m = 10;
         final double p = 0.05;
         final double lambda = 0.5;
-        int[] valuesPoison = generatePoison(N,lambda);
-        showResults("Poison method", valuesPoison, m*p * (1 - p), m*p);
-        double resDeltaHiPoison = Hi2TestForBinomial(Arrays.copyOf(valuesPoison, valuesPoison.length), p, m);
-        showIsAccepted("HI2", resDeltaHiPoison, deltaHi);
+        double[] valuesNormal = normalDistribution(4, 25, 1000);
+        showResults("Normal method", valuesNormal, 25, 4);
+        kolmogorovTestForNormal(4, 25, valuesNormal);
 
-        int[] valuesBernoulli = generateBernoulli(N, 0.6);
-        showResults("Bernoulli method", valuesBernoulli, 0.6 * (1 - 0.6), 0.6);
-        double resDeltaHi = Hi2TestForBernoulli(Arrays.copyOf(valuesBernoulli, valuesBernoulli.length), 0.6);
-        showIsAccepted("HI2", resDeltaHi, deltaHiForBernoulli);
+        double[] valuesExp = exponentialDistribution(0.5, 1000);
+        showResults("Exp method", valuesExp, 1/0.5/0.5, 1/0.5);
+        kolmogorovTestForExponential(0.5, valuesExp);
+        System.out.println("Hi2 value: "+Hi2TestExp(valuesExp, 0.5));
 
-        int[] valuesGeometric = generateGeometric(N, 0.6);
-        int i = 0;
-        for(int v : valuesGeometric) {
-            if(v==2){
-                i++;
-            }
-        }
-        System.out.println(i);
-        showResults("Geometric method", valuesGeometric, 0.6/Math.pow(0.4,2), 1/(1-0.6));
-        System.out.println( Hi2TestForGeometric(Arrays.copyOf(valuesGeometric, valuesGeometric.length), 0.6));
+        double[] valuesWei = weibullDistribution(4,0.5, 1000);
+        showResults("Exp method", valuesWei, pow(4, -2/0.5)*(gamma(1 + 2 / 0.5) - pow(gamma(1+1/0.5), 2)), pow(4, -1/0.5)*gamma(1 + 1/ 0.5));
+        kolmogorovTestForWeibull(4,0.5, valuesWei);
+
     }
 }
