@@ -350,6 +350,25 @@ public class Main {
         return res;
     }
 
+    static double[] evenDistribution(double a, double b, int size)
+    {
+        double[] res = new double[size];
+        int aplha;
+        int betta;
+        double n;
+        for (int i = 0; i < size; i++)
+        {
+                aplha = ThreadLocalRandom.current().nextInt(10000, 1000000);
+                betta = ThreadLocalRandom.current().nextInt(10000, 1000000);
+                aplha = aplha%2==0 ? aplha-1: aplha;
+                betta = betta%2==0 ? betta-1: betta;
+                n = multiplicativeCongruentMethod(1, aplha, betta,M)[0];
+                res[i] = (b-a)*n + a;
+        }
+
+        return res;
+    }
+
 
     static void kolmogorovTestForExponential(double a, double[] expdist)
     {
@@ -466,7 +485,7 @@ public class Main {
         double[] alfasMM = MacLarenMarsagliaMethod(N);
         showResults("MacLaren-Marsaglia method", alfasMM);*/
 
-        final int m = 10;
+       /* final int m = 10;
         final double p = 0.05;
         final double lambda = 0.5;
         double[] valuesNormal = normalDistribution(4, 25, 1000);
@@ -479,8 +498,46 @@ public class Main {
         System.out.println("Hi2 value: "+Hi2TestExp(valuesExp, 0.5));
 
         double[] valuesWei = weibullDistribution(4,0.5, 1000);
-        showResults("Exp method", valuesWei, pow(4, -2/0.5)*(gamma(1 + 2 / 0.5) - pow(gamma(1+1/0.5), 2)), pow(4, -1/0.5)*gamma(1 + 1/ 0.5));
-        kolmogorovTestForWeibull(4,0.5, valuesWei);
+        showResults("Weibull method", valuesWei, pow(4, -2/0.5)*(gamma(1 + 2 / 0.5) - pow(gamma(1+1/0.5), 2)),
+                pow(4, -1/0.5)*gamma(1 + 1/ 0.5));
+        kolmogorovTestForWeibull(4,0.5, valuesWei);*/
+        int n= 10000000;
+        double ans = 0;
+        double x;
+        double p;
+        double lm = 0.5;
+        double[] dist = exponentialDistribution(lm, n);
+        double res = 0.138364478177;
+        for(int i =0; i < n; i++){
+            x = dist[i];
+            p = lm*pow(E, -lm*x);
+
+
+            ans += tan(1.0/(x+2))/(pow(x+2,2)+x-1)/p;
+        }
+        System.out.println("Integ1 results:");
+        System.out.println("value: "+ans/n);
+        System.out.println("error: "+(res-ans/n));
+
+        int k= 100000000;
+
+        double ans2 = 0;
+        double y;
+        double p2;
+        double a = -4;
+        double b = 3;
+        double a2 = -3;
+        double b2 = 4;
+        res = 26.1514470097666;
+        for(int i =0; i < k; i++){
+            x = evenDistribution(a, b, 1)[0];
+            y = evenDistribution(a2, b2, 1)[0];
+
+            ans2 +=49*(x+4)/((pow(x,2)+pow(y, 4)+1)) ;
+        }
+        System.out.println("Integ2 results:");
+        System.out.println("value: "+ans2/k);
+        System.out.println("error: "+(res - ans2/k));
 
     }
 }
