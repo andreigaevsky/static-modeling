@@ -154,16 +154,13 @@ public class Main {
     }
 
 
-    public static double mod(double what, double module) {
-        return what - module * (Math.floor(what / module));
-    }
 
     public static double[] MacLarenMarsagliaMethod(int size) {
         double result[] = new double[size];
 
         int BRVsize = size + K;
-        double[] b = multiplicativeCongruentMethod(BRVsize, paramAlfa, paramBetta, M);
-        double[] c = multiplicativeCongruentMethod(size, 79507, 79507, M);
+        double[] b = Generator.multiplicativeCongruentMethod(BRVsize, paramAlfa, paramBetta, M);
+        double[] c = Generator.multiplicativeCongruentMethod(size, 79507, 79507, M);
         double[] V = new double[K];
         System.arraycopy(b, 0, V, 0, K);
         int s;
@@ -181,16 +178,7 @@ public class Main {
         System.out.println(what + " = " + result + " < " + expected + " is " + (result < expected));
     }
 
-    public static double[] multiplicativeCongruentMethod(int size, double paramAlfa, double paramBetta, double M) {
-        double[] result = new double[size];
 
-        double nextParamAlfa = mod(paramAlfa * paramBetta, M);
-        for (int i = 0; i < size; i++) {
-            result[i] = nextParamAlfa / M;
-            nextParamAlfa = mod(nextParamAlfa * paramBetta, M);
-        }
-        return result;
-    }
 
     private static void showResults(String what, double[] alfas) {
         System.out.println("**** " + what + "*****");
@@ -230,78 +218,6 @@ public class Main {
 
     }
 
-    public static int[] generateBinomial(int size, double p, int m) {
-        int[] result = new int[size];
-
-        int aplha;
-        int betta;
-
-        for (int i = 0; i < size; ++i) {
-            aplha = ThreadLocalRandom.current().nextInt(1000, 1000000);
-            betta = ThreadLocalRandom.current().nextInt(1000, 1000000);
-            aplha = aplha%2==0 ? aplha-1: aplha;
-            betta = betta%2==0 ? betta-1: betta;
-            result[i] = getBinomial(multiplicativeCongruentMethod(m, aplha, betta, M), p);
-        }
-
-        return result;
-    }
-
-    public static int[] generatePoison(int size, double lambda) {
-        return generateBinomial(size, lambda / 10, 10);
-    }
-
-    public static int[] generateGeometric(int size, double p) {
-        int[] result = new int[size];
-
-        int aplha;
-        int betta;
-
-        for (int i = 0; i < size; ++i) {
-            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
-            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
-            aplha = aplha%2==0 ? aplha-1: aplha;
-            betta = betta%2==0 ? betta-1: betta;
-            result[i] = getGeometric(multiplicativeCongruentMethod(1, aplha, betta, M)[0], p);
-        }
-
-        return result;
-    }
-
-    public static int getGeometric(double value, double p) {
-        return (int) Math.ceil(log(value)/ log(1-p));
-    }
-
-    public static int[] generateBernoulli(int size, double p) {
-        int[] result = new int[size];
-
-        int aplha;
-        int betta;
-
-        for (int i = 0; i < size; ++i) {
-            aplha = ThreadLocalRandom.current().nextInt(10000, 100000);
-            betta = ThreadLocalRandom.current().nextInt(10000, 100000);
-            aplha = aplha%2==0 ? aplha-1: aplha;
-            betta = betta%2==0 ? betta-1: betta;
-            result[i] = getBernoulli(multiplicativeCongruentMethod(1, aplha, betta, M)[0], p);
-        }
-
-        return result;
-    }
-
-    public static int getBernoulli(double value, double p) {
-        return value > p ? 0 : 1;
-    }
-
-    public static int getBinomial(double[] array, double p) {
-        int x = 0;
-        for (double v : array) {
-            if (p > v) {
-                ++x;
-            }
-        }
-        return x;
-    }
 
     static void kolmogorovTestForNormal(double mu, double sg_2, double[] normdist)
     {
@@ -328,46 +244,6 @@ public class Main {
     }
 
 
-    static double[] normalDistribution(double m, double s_2, int size)
-    {
-        double[] res = new double[size];
-        int aplha;
-        int betta;
-        for (int i = 0; i < size; i++)
-        {
-            double temp = 0;
-            for (int j = 0; j < 12; j++) {
-                aplha = ThreadLocalRandom.current().nextInt(10000, 1000000);
-                betta = ThreadLocalRandom.current().nextInt(10000, 1000000);
-                aplha = aplha%2==0 ? aplha-1: aplha;
-                betta = betta%2==0 ? betta-1: betta;
-                temp += multiplicativeCongruentMethod(1, aplha, betta,M)[0];
-            }
-            temp -= 6;
-            res[i] = m + sqrt(s_2) * temp;
-        }
-
-        return res;
-    }
-
-    static double[] evenDistribution(double a, double b, int size)
-    {
-        double[] res = new double[size];
-        int aplha;
-        int betta;
-        double n;
-        for (int i = 0; i < size; i++)
-        {
-                aplha = ThreadLocalRandom.current().nextInt(10000, 1000000);
-                betta = ThreadLocalRandom.current().nextInt(10000, 1000000);
-                aplha = aplha%2==0 ? aplha-1: aplha;
-                betta = betta%2==0 ? betta-1: betta;
-                n = multiplicativeCongruentMethod(1, aplha, betta,M)[0];
-                res[i] = (b-a)*n + a;
-        }
-
-        return res;
-    }
 
 
     static void kolmogorovTestForExponential(double a, double[] expdist)
@@ -395,22 +271,7 @@ public class Main {
     }
 
 
-    static double[] exponentialDistribution(double lm, int size)
-    {
-        double[] res = new double [size];
-        int aplha;
-        int betta;
-        for (int i = 0; i < size; i++)
-        {
-            aplha = ThreadLocalRandom.current().nextInt(10000, 1000000);
-            betta = ThreadLocalRandom.current().nextInt(10000, 1000000);
-            aplha = aplha%2==0 ? aplha-1: aplha;
-            betta = betta%2==0 ? betta-1: betta;
-            res[i] = (-1.0 / lm) * log(multiplicativeCongruentMethod(1, aplha, betta,M)[0]);
-        }
 
-        return res;
-    }
 
     static void kolmogorovTestForWeibull(double a, double b, double[] expdist)
     {
@@ -437,22 +298,7 @@ public class Main {
     }
 
 
-    static double[] weibullDistribution(double a,double b,  int size)
-    {
-        double[] res = new double [size];
-        int aplha;
-        int betta;
-        for (int i = 0; i < size; i++)
-        {
-            aplha = ThreadLocalRandom.current().nextInt(10000, 1000000);
-            betta = ThreadLocalRandom.current().nextInt(10000, 1000000);
-            aplha = aplha%2==0 ? aplha-1: aplha;
-            betta = betta%2==0 ? betta-1: betta;
-            res[i] = pow( (-1.0 / a) * log(multiplicativeCongruentMethod(1, aplha, betta,M)[0]), 1.0/b);
-        }
 
-        return res;
-    }
 
     private static double Hi2TestWeibull(double[] array, double a) {
         sort(array);
@@ -479,65 +325,18 @@ public class Main {
 
 
     public static void main(String[] args) {
-/*        double[] alfasKolm = multiplicativeCongruentMethod(N, paramAlfa, paramBetta, M);
-        showResults("Multiplicative Congruent method", alfasKolm);
-
-        double[] alfasMM = MacLarenMarsagliaMethod(N);
-        showResults("MacLaren-Marsaglia method", alfasMM);*/
-
-       /* final int m = 10;
-        final double p = 0.05;
-        final double lambda = 0.5;
-        double[] valuesNormal = normalDistribution(4, 25, 1000);
-        showResults("Normal method", valuesNormal, 25, 4);
-        kolmogorovTestForNormal(4, 25, valuesNormal);
-
-        double[] valuesExp = exponentialDistribution(0.5, 1000);
-        showResults("Exp method", valuesExp, 1/0.5/0.5, 1/0.5);
-        kolmogorovTestForExponential(0.5, valuesExp);
-        System.out.println("Hi2 value: "+Hi2TestExp(valuesExp, 0.5));
-
-        double[] valuesWei = weibullDistribution(4,0.5, 1000);
-        showResults("Weibull method", valuesWei, pow(4, -2/0.5)*(gamma(1 + 2 / 0.5) - pow(gamma(1+1/0.5), 2)),
-                pow(4, -1/0.5)*gamma(1 + 1/ 0.5));
-        kolmogorovTestForWeibull(4,0.5, valuesWei);*/
-        int n= 10000000;
-        double ans = 0;
-        double x;
-        double p;
-        double lm = 0.5;
-        double[] dist = exponentialDistribution(lm, n);
-        double res = 0.138364478177;
-        for(int i =0; i < n; i++){
-            x = dist[i];
-            p = lm*pow(E, -lm*x);
-
-
-            ans += tan(1.0/(x+2))/(pow(x+2,2)+x-1)/p;
-        }
-        System.out.println("Integ1 results:");
-        System.out.println("value: "+ans/n);
-        System.out.println("error: "+(res-ans/n));
-
-        int k= 100000000;
-
-        double ans2 = 0;
-        double y;
-        double p2;
-        double a = -4;
-        double b = 3;
-        double a2 = -3;
-        double b2 = 4;
-        res = 26.1514470097666;
-        for(int i =0; i < k; i++){
-            x = evenDistribution(a, b, 1)[0];
-            y = evenDistribution(a2, b2, 1)[0];
-
-            ans2 +=49*(x+4)/((pow(x,2)+pow(y, 4)+1)) ;
-        }
-        System.out.println("Integ2 results:");
-        System.out.println("value: "+ans2/k);
-        System.out.println("error: "+(res - ans2/k));
+        int N = 10000;
+        int m = 10000;
+        double[][] A = new double[][]{{0.7, -0.2, 0.3},{0.5, 1.3,0.1},{-0.1,0.4, 1.3}};
+        double [] f = new double[]{-2, -3, 2};
+        double [] realResult = new double[]{-3.795, -0.967, 1.544};
+        SystemResolver resolver = new SystemResolver(A, f,N, m);
+        resolver.resolve();
+        resolver.showSolution();
+        System.out.println("Real solution");
+        Arrays.stream(realResult).forEach(System.out::println);
+        System.out.println("\nDiscrepancy:");
+        Arrays.stream(resolver.getDiscrepancy(realResult)).forEach(System.out::println);
 
     }
 }
